@@ -1,0 +1,18 @@
+{
+  "name": "sleek-shop",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": ["apps/web", "apps/api"],
+  "scripts": {
+    "dev": "concurrently -k -n API,WEB -c magenta,cyan \"npm run dev -w @sleek/api\" \"npm run dev -w @sleek/web\"",
+    "dev:web": "npm run dev -w @sleek/web",
+    "dev:api": "npm run dev -w @sleek/api",
+    "build": "npm run build -w @sleek/api && npm run build -w @sleek/web",
+    "test": "npm run test -w @sleek/api",
+    "typecheck": "npm run typecheck -w @sleek/api && npm run typecheck -w @sleek/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": { "node": ">=20.0.0", "npm": ">=10.0.0" }
+}

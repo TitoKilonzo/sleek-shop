@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: sleek-shop-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build -w @sleek/api
+    startCommand: npm run start -w @sleek/api
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: WEB_ORIGIN
+        sync: false
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      - key: API_RATE_LIMIT_WINDOW_MS
+        value: "900000"
+      - key: API_RATE_LIMIT_MAX
+        value: "300"
+      - key: ORDER_RATE_LIMIT_MAX
+        value: "20"
