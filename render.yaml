@@ -1,10 +1,11 @@
+# Render blueprint for the API. The web app is deployed separately (Vercel, Netlify or any static host).
 services:
   - type: web
     name: sleek-shop-api
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build -w @sleek/api
-    startCommand: npm run start -w @sleek/api
+    buildCommand: npm install --include=dev && npm run build:api
+    startCommand: npm run start:api
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -15,9 +16,11 @@ services:
         sync: false
       - key: TURSO_AUTH_TOKEN
         sync: false
-      - key: API_RATE_LIMIT_WINDOW_MS
-        value: "900000"
+      - key: SESSION_DAYS
+        value: "7"
       - key: API_RATE_LIMIT_MAX
-        value: "300"
-      - key: ORDER_RATE_LIMIT_MAX
+        value: "600"
+      - key: LOGIN_RATE_LIMIT_MAX
         value: "20"
+      - key: ORDER_RATE_LIMIT_MAX
+        value: "30"

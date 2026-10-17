@@ -1,18 +1,25 @@
 {
   "name": "sleek-shop",
+  "version": "2.0.0",
   "private": true,
-  "version": "1.0.0",
-  "workspaces": ["apps/web", "apps/api"],
+  "description": "Sleek Shop: installable storefront, customer accounts and admin console, backed by Turso.",
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "dev": "concurrently -k -n API,WEB -c magenta,cyan \"npm run dev -w @sleek/api\" \"npm run dev -w @sleek/web\"",
-    "dev:web": "npm run dev -w @sleek/web",
+    "dev": "npm run dev -w @sleek/web",
     "dev:api": "npm run dev -w @sleek/api",
-    "build": "npm run build -w @sleek/api && npm run build -w @sleek/web",
+    "dev:full": "concurrently -k -n API,WEB -c magenta,cyan \"npm run dev -w @sleek/api\" \"npm run dev -w @sleek/web\"",
+    "build": "npm run build -w @sleek/web",
+    "build:api": "npm run build -w @sleek/api",
+    "start": "npm run start -w @sleek/web",
+    "start:api": "npm run start -w @sleek/api",
+    "typecheck": "npm run typecheck -w @sleek/shared && npm run typecheck -w @sleek/api && npm run typecheck -w @sleek/web",
     "test": "npm run test -w @sleek/api",
-    "typecheck": "npm run typecheck -w @sleek/api && npm run typecheck -w @sleek/web"
+    "images": "npm run images -w @sleek/web",
+    "db:migrate": "npm run db:migrate -w @sleek/api",
+    "db:seed": "npm run db:seed -w @sleek/api --",
+    "db:reset": "npm run db:seed -w @sleek/api -- --force",
+    "admin:create": "npm run admin:create -w @sleek/api --"
   },
-  "devDependencies": {
-    "concurrently": "^9.1.2"
-  },
-  "engines": { "node": ">=20.0.0", "npm": ">=10.0.0" }
+  "devDependencies": { "concurrently": "^9.1.2" },
+  "engines": { "node": ">=20.0.0" }
 }

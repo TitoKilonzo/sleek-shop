@@ -9,11 +9,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
   const timer = useRef<number | null>(null);
   useEffect(() => () => { if (timer.current !== null) window.clearTimeout(timer.current); }, []);
-  const showToast = useCallback((nextMessage: string) => {
-    setMessage(nextMessage);
+  const showToast = useCallback((next: string) => {
+    setMessage(next);
     setVisible(true);
     if (timer.current !== null) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setVisible(false), 2600);
+    timer.current = window.setTimeout(() => setVisible(false), 3200);
   }, []);
   return <ToastContext.Provider value={{ showToast }}>
     {children}

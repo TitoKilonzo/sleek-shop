@@ -1,41 +1,74 @@
-# Sleek Shop architecture
+# Architecture
 
-## Runtime topology
+Sleek Shop is an npm workspaces monorepo with three packages.
 
-```text
-Browser / installed PWA
-  ├─ Vercel CDN and static frontend
-  └─ HTTPS requests ──> Render Node.js API
-                           ├─ Helmet / CORS / compression / rate limit
-                           ├─ Zod request validation
-                           ├─ Catalogue and order modules
-                           └─ Store adapter
-                                 ├─ Demo repository (local development only)
-                                 └─ Turso / libSQL (production persistence)
-
-Product media: dedicated media/CDN URLs (currently Unsplash sample URLs)
+```
+apps/web         React, Vite, React Router. The storefront, customer area, admin console and PWA.
+apps/api         Express API. Talks to Turso (libSQL). Handles auth, orders, products and settings.
+packages/shared  Types, demo data and the image manifest. Imported by both apps.
 ```
 
-## Architecture approach
+## Two ways to run
 
-Start as a modular monolith. Product browsing, product details and categories share the catalogue module. Checkout and order creation live in a distinct order module. Payment integrations, seller operations, delivery orchestration and background jobs should be independent modules/interfaces before deployment-level separation is considered.
+| Mode | When | Where data lives |
+| --- | --- | --- |
+| Demo | `VITE_API_URL` is empty | Hard coded demo data, kept in the browser (`localStorage`). No backend. |
+| API | `VITE_API_URL` points at the API | Turso. The browser keeps only a session token and an offline cache of products and settings. |
 
-Keep business-critical decisions on the server: price, availability, order total, delivery fee, user permissions and payment state. The browser is a presentation and interaction layer, not the authority for commercial state.
+The same screens run in both modes. `apps/web/src/lib/db.ts` is the only place that decides where data comes from.
+Every action (sign in, place order, save product, change order status and so on) is an async function that either
+calls the API through `lib/remote.ts` or updates the local stores.
 
-## Scaling principles
+## Web app
 
-1. Serve immutable frontend assets and versioned images through CDNs.
-2. Measure API p50/p95/p99 latency, error rate, DB query latency, database write contention and checkout failure rate.
-3. Tune query shapes and indexes before adding shared cache infrastructure.
-4. Keep API instances stateless; store sessions and shared rate-limit state outside an instance when auth/scaling is introduced.
-5. Add a durable queue for retryable notifications and external provider events when the workflow needs it.
-6. Use idempotency and transactions for checkout, stock updates and payment events.
-7. Load-test a mix of browse/search traffic, checkout bursts, duplicate callbacks and simultaneous purchases of the final unit.
+```
+src/
+  components/   Navbar, Footer, UserMenu, Console (admin and account shell), InstallPrompt, Boot, SmartImage
+  context/      Toast notifications
+  lib/          db.ts (data layer), remote.ts (API client), store.ts (persisted stores), pwa.ts, format.ts
+  pages/        Storefront pages
+  pages/account Customer area
+  pages/admin   Admin console
+  styles.css    Design system and page styles
+public/         Icons, robots.txt, _redirects, downloaded photographs in images/
+scripts/        fetch-images.mjs
+```
 
-## Cache boundaries
+Routing and access:
 
-Public category/product data can use short CDN cache-control windows and revalidation. Keep carts, personal account responses, addresses, seller dashboards, checkout and order data private and non-shareable. Even when the displayed stock is cached, checkout must check current stock inside a transaction. Cache invalidation should be triggered for product status, price, images and other public catalogue updates.
+* Public: `/`, `/shop`, `/products/:slug`, `/cart`, `/checkout`, `/saved`, `/help/:topic`, `/contact`, `/login`, `/register`
+* Signed in: `/account`, `/account/orders`, `/account/profile`
+* Staff (admin or manager): `/admin`, `/admin/orders`, `/admin/products`, `/admin/customers`, `/admin/messages`
+* Administrator only: `/admin/settings`
 
-## API error contract
+## API
 
-Expected validation errors return HTTP 400 with a stable human-readable error plus structured validation details. Missing products return 404. Stock conflicts return 409. Unexpected failures return a generic HTTP 500 response while server logs receive a request-safe summary.
+```
+src/
+  config.ts          Environment variables
+  db/                schema.ts, client.ts, mappers.ts, seeder.ts, seed.ts, migrate.ts, create-admin.ts
+  lib/               security.ts (scrypt, tokens), validation.ts (zod), http.ts
+  middleware/auth.ts Session lookup and role guards
+  routes/index.ts    All routes under /api/v1
+  services/orders.ts Transactional order creation, status changes and stock handling
+  app.ts / server.ts Express app and process start up
+test/                Integration tests against a temporary database file
+```
+
+Key behaviours:
+
+* `GET /api/v1/bootstrap` returns everything the current visitor is allowed to see (public catalogue for visitors,
+  own orders for customers, everything for staff). The web app loads this once and after every change.
+* Prices, delivery fees and stock are always calculated on the server. Orders are written in a single transaction.
+* The schema is idempotent and applied automatically when the server starts.
+
+## Database tables
+
+`users`, `sessions`, `products`, `orders`, `order_items`, `messages`, `subscribers`, `settings`.
+Money is stored as whole Kenyan Shillings. Timestamps are ISO 8601 strings in UTC.
+
+## PWA
+
+Generated by `vite-plugin-pwa` (Workbox). The service worker precaches the app shell, fonts and local photographs and
+serves the app offline. `src/lib/pwa.ts` captures the browser install event at start up and `InstallPrompt` shows the
+install popup, with an instruction card on iOS where browsers do not expose the install event.
