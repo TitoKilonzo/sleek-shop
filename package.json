@@ -20,6 +20,9 @@
     "db:reset": "npm run db:seed -w @sleek/api -- --force",
     "admin:create": "npm run admin:create -w @sleek/api --"
   },
-  "devDependencies": { "concurrently": "^9.1.2" },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "esbuild": "^0.25.12"
+  },
   "engines": { "node": ">=20.0.0" }
 }
