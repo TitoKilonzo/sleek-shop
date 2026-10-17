@@ -8,7 +8,7 @@
 * Role checks on every protected route (customer, manager, administrator). Customers only ever receive their own orders.
 * Request validation with zod (strict schemas, size limits). Parameterised SQL only.
 * Prices, delivery fees and stock are calculated on the server and orders are written in one transaction.
-* Helmet headers, exact origin CORS allow list, JSON size limit, global and per route rate limits (stricter for sign in and orders).
+* Helmet headers, same site only CORS (extra addresses only through `WEB_ORIGIN`), JSON size limit, global and per route rate limits (stricter for sign in and orders).
 * Generic error responses. Request bodies, tokens and customer details are never logged.
 * Secrets stay on the server. The only public setting is `VITE_API_URL`.
 

@@ -1,21 +1,25 @@
 # Architecture
 
-Sleek Shop is an npm workspaces monorepo with three packages.
+Sleek Shop is a single project. One repository, one Vercel deployment: the web app and the API share one address.
 
 ```
-apps/web         React, Vite, React Router. The storefront, customer area, admin console and PWA.
-apps/api         Express API. Talks to Turso (libSQL). Handles auth, orders, products and settings.
-packages/shared  Types, demo data and the image manifest. Imported by both apps.
+src/       React, Vite, React Router. The storefront, customer area, admin console and PWA.
+server/    Express API. Talks to Turso (libSQL). Handles auth, orders, products and settings.
+api/       index.ts, the Vercel serverless entry that runs the Express app.
+shared/    Types, demo data and the image manifest. Imported by both sides.
+scripts/   Database seed, migrate, admin creation and the image downloader.
+public/    Icons, robots.txt and photographs (images/).
+tests/     API integration tests.
 ```
 
 ## Two ways to run
 
 | Mode | When | Where data lives |
 | --- | --- | --- |
-| Demo | `VITE_API_URL` is empty | Hard coded demo data, kept in the browser (`localStorage`). No backend. |
-| API | `VITE_API_URL` points at the API | Turso. The browser keeps only a session token and an offline cache of products and settings. |
+| Demo | `VITE_USE_API` is not set | Hard coded demo data, kept in the browser (`localStorage`). No backend. |
+| API | `VITE_USE_API=true` | Turso. The browser keeps only a session token and an offline cache of products and settings. |
 
-The same screens run in both modes. `apps/web/src/lib/db.ts` is the only place that decides where data comes from.
+The same screens run in both modes. `src/lib/db.ts` is the only place that decides where data comes from.
 Every action (sign in, place order, save product, change order status and so on) is an async function that either
 calls the API through `lib/remote.ts` or updates the local stores.
 

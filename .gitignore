@@ -1,11 +1,11 @@
 node_modules
 dist
-dist-api
 dev-dist
 .env
 .env.local
+.vercel
 *.log
 *.db
 *.db-journal
-apps/api/data
+data
 .DS_Store
